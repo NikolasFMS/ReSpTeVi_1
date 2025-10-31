@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaction Speed Test Video Processor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #fff 0%, #EFF9E8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2em;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .upload-section h2 {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px dashed #658C6E;
+            border-radius: 8px;
+            cursor: pointer;
+            background: white;
+            transition: all 0.3s;
+        }
+
+        input[type="file"]:hover {
+            border-color: #85A898;
+            background: #f8f9ff;
+        }
+
+        .file-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            padding: 10px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #F5E2B0 0%, #DFCD80 100%);
+            color: #658C6E;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #F5E2B0 0%, #DFCD80 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .preview-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .video-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-card video {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .video-card h3 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .download-btn {
+            padding: 8px 16px;
+            background: #658C6E;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .download-btn:hover {
+            background: #EFF9E8;
+            color: #658C6E;
+        }
+
+        canvas {
+            display: none;
+        }
+
+        .status-message {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab-btn {
+            padding: 7px 15px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .tab-btn.active {
+            background: #658C6E;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-content label {
+            display: block;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        .tab-content input[type="range"] {
+            width: 70%;
+        }
+
+        .tab-content span {
+            font-weight: bold;
+            color: #658C6E;
+        }
+
+        .preview-box {
+            margin-top: 20px;
+            border: 2px dashed #658C6E;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .preview-box video {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+        }
+
+        .position-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .position-inputs input {
+            width: 70px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Reaction Speed Test Video</h1>
+
+        <!-- Загрузка видео -->
+        <div class="upload-section">
+            <h2>1. Загрузите видео файлы</h2>
+            <input type="file" id="videoInput" accept="video/*" multiple>
+            <div class="file-list" id="videoList"></div>
+        </div>
+
+        <!-- Загрузка изображений -->
+        <div class="upload-section">
+            <h2>2. Загрузите изображения</h2>
+            <input type="file" id="imageInput" accept="image/*" multiple>
+            <div class="file-list" id="imageList"></div>
+        </div>
+
+        <!-- Настройки -->
+        <div class="upload-section">
+            <h2>3. Настройки обработки</h2>
+            <div id="settingsPanel">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="text">Текст</button>
+                    <button class="tab-btn" data-tab="timer">Таймер</button>
+                    <button class="tab-btn" data-tab="image">Изображение</button>
+                    <button class="tab-btn" data-tab="output">Вывод</button>
+                </div>
+
+                <!-- Текст -->
+                <div class="tab-content active" id="text-tab">
+                    <label>Текст: <input type="text" id="textContent" value="Reaction SPEED test..."></label>
+                    <label>Шрифт: <select id="textFontFamily">
+                            <option>Helvetica</option>
+                            <option>Arial</option>
+                            <option>Times New Roman</option>
+                            <option>Comic Sans MS</option>
+                            <option>Impact</option>
+                        </select></label>
+                    <label>Размер: <input type="range" id="textFontSize" min="20" max="100" value="30"> <span
+                            id="textFontSizeVal">30</span>px</label>
+                    <label>Жирность: <select id="textFontWeight">
+                            <option value="normal">Обычный</option>
+                            <option value="bold" selected>Жирный</option>
+                            <option value="bolder">Сверхжирный</option>
+                        </select></label>
+                    <label>Цвет: <input type="color" id="textColor" value="#ffffff"></label>
+                    <label>Фон: <input type="color" id="textBgColor" value="#000000"> <input type="range"
+                            id="textBgOpacity" min="0" max="100" value="0"> <span
+                            id="textBgOpacityVal">60</span>%</label>
+                    <label>Позиция X: <input type="number" id="textPosX" value="0" step="1"></label>
+                    <label>Позиция Y: <input type="number" id="textPosY" value="-40" step="1"></label>
+                </div>
+
+                <!-- Таймер -->
+                <div class="tab-content" id="timer-tab">
+                    <label>Длительность (сек): <input type="number" id="timerDuration" min="1" max="10"
+                            value="5"></label>
+                    <label>Размер: <input type="range" id="timerFontSize" min="30" max="150" value="40"> <span
+                            id="timerFontSizeVal">40</span>px</label>
+                    <label>Шрифт: <select id="timerFontFamily">
+                            <option>Helvetica</option>
+                            <option>Arial</option>
+                            <option>Impact</option>
+                            <option>DSEG7 Classic</option>
+                        </select></label>
+                    <label>Цвет: <input type="color" id="timerColor" value="#FFFFFF"></label>
+                    <label>Позиция X: <input type="number" id="timerPosX" value="0" step="1"></label>
+                    <label>Позиция Y: <input type="number" id="timerPosY" value="5" step="1"></label>
+                </div>
+
+                <!-- Изображение -->
+                <div class="tab-content" id="image-tab">
+                    <label>Время вставки (сек): <input type="number" id="imageTime" step="0.01" min="0"
+                            value="5.00"></label>
+                    <label>Длительность (сек): <input type="number" id="imageDuration" step="0.01" min="0.01" max="1"
+                            value="0.02"></label>
+                    <label><input type="checkbox" id="imageScale" checked> Масштабировать под видео</label>
+                </div>
+
+                <!-- Вывод -->
+                <div class="tab-content" id="output-tab">
+                    <label>FPS: <select id="outputFps">
+                            <option value="24">24</option>
+                            <option value="30" selected>30</option>
+                            <option value="60">60</option>
+                        </select></label>
+                    <label>Формат: <select id="outputFormat">
+                            <option value="webm">WebM (быстрее)</option>
+                            <option value="mp4">MP4</option>
+                        </select></label>
+                    <label>Качество: <input type="range" id="jpegQuality" min="50" max="100" value="90"> <span
+                            id="jpegQualityVal">90</span>%</label>
+                    <label><input type="checkbox" id="keepAudio" checked> Сохранить аудио</label>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn" id="processBtn" disabled>Обработать видео</button>
+
+        <div class="progress-section" id="progressSection">
+            <h2>Прогресс обработки</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <div id="statusMessage"></div>
+        </div>
+
+        <div class="preview-section" id="previewSection">
+            <h2>Обработанные видео</h2>
+            <div class="video-grid" id="videoGrid"></div>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // === Глобальные переменные ===
+        let videos = [], images = [], processedVideos = [];
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // === Табы ===
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
+            });
+        });
+
+        // === Обновление ползунков ===
+        ['textFontSize', 'timerFontSize', 'textBgOpacity', 'jpegQuality'].forEach(id => {
+            const input = document.getElementById(id);
+            const span = document.getElementById(id + 'Val');
+            input.addEventListener('input', () => span.textContent = input.value);
+        });
+
+        // === Загрузка файлов ===
+        document.getElementById('videoInput').addEventListener('change', e => {
+            videos = Array.from(e.target.files);
+            updateFileList(videos, 'videoList', 'видео');
+            checkReadyToProcess();
+        });
+
+        document.getElementById('imageInput').addEventListener('change', e => {
+            images = Array.from(e.target.files);
+            updateFileList(images, 'imageList', 'изображение');
+            checkReadyToProcess();
+        });
+
+        function updateFileList(files, listId, type) {
+            const list = document.getElementById(listId);
+            list.innerHTML = '';
+            files.forEach((f, i) => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.textContent = `${i + 1}. ${f.name}`;
+                list.appendChild(div);
+            });
+        }
+
+        function checkReadyToProcess() {
+            document.getElementById('processBtn').disabled = !(videos.length > 0 && images.length > 0);
+        }
+
+        function scrollToElement(el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // === Настройки (ИСПРАВЛЕНО!) ===
+        function getSettings() {
+            const bgColor = document.getElementById('textBgColor').value;
+            const [r, g, b] = [1, 3, 5].map(i => parseInt(bgColor.substr(i, 2), 16));
+            const opacity = document.getElementById('textBgOpacity').value / 100;
+
+            return {
+                text: {
+                    content: document.getElementById('textContent').value,
+                    fontSize: +document.getElementById('textFontSize').value,
+                    fontFamily: document.getElementById('textFontFamily').value,
+                    fontWeight: document.getElementById('textFontWeight').value,
+                    color: document.getElementById('textColor').value,
+                    backgroundColor: `rgba(${r},${g},${b},${opacity})`,
+                    posX: +document.getElementById('textPosX').value,
+                    posY: +document.getElementById('textPosY').value
+                },
+                timer: {
+                    duration: +document.getElementById('timerDuration').value,
+                    fontSize: +document.getElementById('timerFontSize').value,
+                    fontFamily: document.getElementById('timerFontFamily').value,
+                    color: document.getElementById('timerColor').value,
+                    posX: +document.getElementById('timerPosX').value,
+                    posY: +document.getElementById('timerPosY').value
+                },
+                image: {
+                    displayTime: +document.getElementById('imageTime').value,
+                    displayDuration: +document.getElementById('imageDuration').value,
+                    scaleToFit: document.getElementById('imageScale').checked
+                },
+                output: {
+                    fps: +document.getElementById('outputFps').value,
+                    format: document.getElementById('outputFormat').value,
+                    jpegQuality: +document.getElementById('jpegQuality').value / 100,
+                    keepAudio: document.getElementById('keepAudio').checked
+                }
+            };
+        }
+
+        // === Наложение ===
+        function drawOverlay(ctx, currentTime, settings, img, w, h) {
+            const inCountdown = currentTime < settings.timer.duration;
+            const countdown = Math.ceil(settings.timer.duration - currentTime);
+
+            if (inCountdown) {
+                // Фон
+                ctx.fillStyle = settings.text.backgroundColor;
+                ctx.fillRect(0, h / 2 - 120, w, 240);
+
+                // Текст
+                ctx.font = `${settings.text.fontWeight} ${settings.text.fontSize}px ${settings.text.fontFamily}`;
+                ctx.fillStyle = settings.text.color;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(settings.text.content, w / 2 + settings.text.posX, h / 2 + settings.text.posY);
+
+                // Таймер
+                ctx.font = `bold ${settings.timer.fontSize}px ${settings.timer.fontFamily}`;
+                ctx.fillStyle = settings.timer.color;
+                ctx.fillText(countdown, w / 2 + settings.timer.posX, h / 2 + settings.timer.posY);
+            }
+
+            // Вставка изображения (ровно на displayTime, длительностью displayDuration)
+            const imgStart = settings.image.displayTime;
+            const imgEnd = imgStart + settings.image.displayDuration;
+            if (currentTime >= imgStart && currentTime < imgEnd) {
+                const scale = settings.image.scaleToFit ? Math.min(w / img.width, h / img.height) : 1;
+                const dw = img.width * scale, dh = img.height * scale;
+                ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+            }
+        }
+
+        // === Обработка ===
+        document.getElementById('processBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('processBtn');
+            btn.disabled = true;
+            const progressSection = document.getElementById('progressSection');
+            progressSection.style.display = 'block';
+            document.getElementById('previewSection').style.display = 'none';
+            processedVideos = [];
+            scrollToElement(progressSection);
+
+            for (let i = 0; i < videos.length; i++) {
+                const imgIdx = i % images.length;
+                const progress = ((i + 1) / videos.length) * 100;
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('progressFill').textContent = Math.round(progress) + '%';
+                updateStatus(`Обработка ${i + 1}/${videos.length}: ${videos[i].name}`);
+
+                try {
+                    const blob = await processVideoFull(videos[i], images[imgIdx]);
+                    if (blob && blob.size > 0) {
+                        processedVideos.push({ name: videos[i].name, blob, imageName: images[imgIdx].name });
+                    }
+                } catch (e) {
+                    updateStatus(`Ошибка: ${videos[i].name} — ${e.message}`, true);
+                    console.error(e);
+                }
+            }
+
+            displayProcessedVideos();
+            updateStatus('Готово! ✅');
+            btn.disabled = false;
+            scrollToElement(document.getElementById('previewSection'));
+        });
+
+        async function processVideoFull(videoFile, imageFile) {
+            const settings = getSettings();
+            const video = document.createElement('video');
+            video.src = URL.createObjectURL(videoFile);
+            await new Promise(r => video.onloadedmetadata = r);
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const img = new Image();
+            img.src = URL.createObjectURL(imageFile);
+            await new Promise(r => img.onload = r);
+
+            const fps = settings.output.fps;
+            const frameDuration = 1 / fps;
+            const totalFrames = Math.ceil(video.duration * fps);
+            const frames = [];
+
+            for (let i = 0; i < totalFrames; i++) {
+                const time = i * frameDuration;
+                video.currentTime = time;
+                await new Promise(r => video.onseeked = r);
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                drawOverlay(ctx, time, settings, img, canvas.width, canvas.height);
+
+                frames.push(canvas.toDataURL('image/jpeg', settings.output.jpegQuality));
+            }
+
+            return await createVideoFromFrames(frames, fps, video.duration, videoFile, settings.output.keepAudio, settings.output.format);
+        }
+
+        // === Создание видео из кадров (MediaRecorder + Canvas Stream) ===
+        async function createVideoFromFrames(frames, fps, duration, videoFile, keepAudio, format) {
+            const captureCanvas = document.createElement('canvas');
+            captureCanvas.width = canvas.width;
+            captureCanvas.height = canvas.height;
+            const captureCtx = captureCanvas.getContext('2d');
+
+            const stream = captureCanvas.captureStream(fps);
+            let finalStream = stream;
+            let audioElement = null;
+
+            if (keepAudio && videoFile) {
+                audioElement = new Audio(URL.createObjectURL(videoFile));
+                await new Promise(r => audioElement.onloadedmetadata = r);
+                const audioCtx = new AudioContext();
+                const source = audioCtx.createMediaElementSource(audioElement);
+                const dest = audioCtx.createMediaStreamDestination();
+                source.connect(dest);
+                finalStream = new MediaStream([...stream.getVideoTracks(), dest.stream.getAudioTracks()[0]]);
+                audioElement.play().catch(() => { });
+            }
+
+            const mime = format === 'mp4' ? 'video/mp4' : 'video/webm;codecs=vp9';
+            const recorder = new MediaRecorder(finalStream, { mimeType: mime });
+            const chunks = [];
+
+            recorder.ondataavailable = e => e.data.size > 0 && chunks.push(e.data);
+            recorder.start();
+            const interval = setInterval(() => recorder.requestData(), 100);
+
+            let frameIndex = 0;
+            const startTime = performance.now();
+
+            const drawNext = () => {
+                if (frameIndex >= frames.length) {
+                    clearInterval(interval);
+                    recorder.stop();
+                    if (audioElement) audioElement.pause();
+                    return;
+                }
+
+                const img = new Image();
+                img.onload = () => {
+                    captureCtx.clearRect(0, 0, captureCanvas.width, captureCanvas.height);
+                    captureCtx.drawImage(img, 0, 0);
+                    frameIndex++;
+
+                    const expected = frameIndex / fps * 1000;
+                    const now = performance.now() - startTime;
+                    const delay = Math.max(0, expected - now);
+                    setTimeout(drawNext, delay);
+                };
+                img.src = frames[frameIndex];
+            };
+
+            drawNext();
+
+            return new Promise((res, rej) => {
+                recorder.onstop = () => {
+                    clearInterval(interval);
+                    const blob = new Blob(chunks, { type: mime });
+                    res(blob.size > 0 ? blob : new Blob());
+                };
+                recorder.onerror = rej;
+            });
+        }
+
+        // === Превью и скачивание ===
+        function displayProcessedVideos() {
+            const grid = document.getElementById('videoGrid');
+            grid.innerHTML = '';
+            document.getElementById('previewSection').style.display = 'block';
+
+            if (!processedVideos.length) {
+                grid.innerHTML = '<p style="color:#999;text-align:center;">Нет видео</p>';
+                return;
+            }
+
+            processedVideos.forEach((item, i) => {
+                const url = URL.createObjectURL(item.blob);
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.innerHTML = `
+                <h3>${i + 1}. ${item.name}</h3>
+                <p style="font-size:12px;color:#666;margin-bottom:10px;">Изображение: ${item.imageName}</p>
+                <video controls style="width:100%;border-radius:8px;margin-bottom:10px;">
+                    <source src="${url}" type="${item.blob.type}">
+                </video>
+                <button class="download-btn" onclick="(function(){
+                    const a = document.createElement('a');
+                    a.href = '${url}';
+                    a.download = 'processed_${item.name.replace(/[^a-zA-Z0-9.]/g, '_')}';
+                    a.click();
+                })()">Скачать</button>
+            `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateStatus(msg, error = false) {
+            const el = document.getElementById('statusMessage');
+            el.textContent = msg;
+            el.className = error ? 'status-message error-message' : 'status-message';
+        }
+
+        // Инициализация значений
+        ['textFontSize', 'timerFontSize', 'textBgOpacity', 'jpegQuality'].forEach(id => {
+            document.getElementById(id + 'Val').textContent = document.getElementById(id).value;
+        });
+    </script>
+</body>
+
+</html>
